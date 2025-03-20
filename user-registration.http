@@ -1,0 +1,71 @@
+@host = http://localhost:8080
+
+### 정상 회원가입 요청
+POST {{host}}/api/users
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "name": "홍길동"
+}
+
+### Validation 실패 - 유효하지 않은 이메일 형식
+POST {{host}}/api/users
+Content-Type: application/json
+
+{
+  "email": "invalid-email",
+  "password": "password123",
+  "name": "테스트유저"
+}
+
+### Validation 실패 - 비밀번호 길이 부족 (8자 미만)
+POST {{host}}/api/users
+Content-Type: application/json
+
+{
+  "email": "short@example.com",
+  "password": "123",
+  "name": "테스트유저"
+}
+
+### Validation 실패 - 필수 필드 누락 (이름 필드 누락)
+POST {{host}}/api/users
+Content-Type: application/json
+
+{
+  "email": "noname@example.com",
+  "password": "password123"
+}
+
+### Validation 실패 - 비어있는 값 (이메일 빈 문자열)
+POST {{host}}/api/users
+Content-Type: application/json
+
+{
+  "email": "",
+  "password": "password123",
+  "name": "테스트유저"
+}
+
+### 이메일 중복 오류 테스트 (첫 번째 요청 성공 후 실행)
+# 첫 번째 요청과 동일한 이메일로 다시 요청
+POST {{host}}/api/users
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "different123",
+  "name": "다른사용자"
+}
+
+### 여러 검증 오류 동시 발생
+POST {{host}}/api/users
+Content-Type: application/json
+
+{
+  "email": "invalid",
+  "password": "123",
+  "name": ""
+}
