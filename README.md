@@ -185,7 +185,7 @@ Problem JSON은 `application/problem+json` 미디어 타입을 사용해야 합�
 
 ## 클라이언트 측 처리 지침
 
-1. **미디어 타입 확인:*8 응답의 `Content-Type`이 `application/problem+json`인지 확인합니다.
+1. **미디어 타입 확인:** 응답의 `Content-Type`이 `application/problem+json`인지 확인합니다.
     2. **기본 필드 활용:**
         - `type:`
             - 문제 유형별로 다른 처리 로직을 구현할 수 있습니다.
@@ -245,9 +245,53 @@ Problem JSON은 `application/problem+json` 미디어 타입을 사용해야 합�
 - **활용 예시:**
     - 오류 메시지 아래에 추가 도움말로 표시
 
+## Spring Boot 3에서의 Problem Details 구현
+
+Spring Boot 3는 RFC 9457 "Problem Details for HTTP APIs" 표준을 기본적으로 지원합니다.
+
+### 주요 컴포넌트
+
+1. **ProblemDetail 클래스**
+- RFC 9457 표준에 맞는 오류 응답을 생성하는 기본 구현
+- 기본 필드(`type`, `title`, `status`, `detail`, `instance`) 및 확장 필드 지원
+- `setProperty()` 메서드를 통한 확장 필드 추가
+
+2. **ResponseEntityExceptionHandler 클래스**
+- Spring MVC 예외를 처리하는 편리한 기본 클래스
+- `@ControllerAdvice`를 통해 전역 예외 처리 설정
+- 모든 Spring MVC 예외와 ErrorResponseException을 처리
+
+
+### Spring Boot 회원가입 API 예제 구현
+
+이 예제는 Spring Boot 3를 사용하여 회원가입 API를 구현하고, Problem Details 표준을 따르는 오류 응답을 제공합니다.
+
+- **비즈니스 예외 처리 (RegistrationExceptionHandler)**
+  - 회원가입 관련 비즈니스 규칙 위반 예외 처리 (이메일 중복 등)
+  - 높은 우선순위로 설정하여 먼저 처리됨 (`@Order(Ordered.HIGHEST_PRECEDENCE)`)
+  - 특정 비즈니스 규칙에 맞는 상세한 오류 정보 제공
+
+- **전역 예외 처리 (GlobalExceptionHandler)**
+  - Spring MVC 표준 예외 처리 (유효성 검사, 요청 형식 오류 등)
+  - ResponseEntityExceptionHandler 상속을 통한 표준 예외 자동 처리
+  - 모든 컨트롤러에 공통으로 적용되는 예외 처리
+  - 낮은 우선순위로 설정 (`@Order(Ordered.LOWEST_PRECEDENCE)`, Default로 설정되어 있음)
+
+### 테스트 방법
+
+예제를 구현한 후 IntelliJ IDEA 환경에서 HTTP 클라이언트를 사용하여 쉽게 테스트할 수 있습니다.   
+1. IntelliJ IDEA를 실행
+2. user-registration.http 파일을 열어, 요청 실행
+
+**테스트 시나리오**:
+- **유효성 검사 오류**: 유효하지 않은 이메일 형식, 짧은 비밀번호, 필수 필드 누락 등 테스트
+- **도메인 규칙 위반**: 이메일 중복 등의 비즈니스 규칙 검증
+- **복합 오류**: 여러 유효성 검사 오류가 동시에 발생하는 경우
+
+
 ## 참조
 
-- [Stop returning custom error responses from your API. Do this instead. - Youtube](https://www.youtube.com/watch?v=4NfflZilTvk)
+- [Stop returning custom error responses from your API. Do this instead. - YouTube](https://www.youtube.com/watch?v=4NfflZilTvk)
 - [Understanding Problem JSON - Medium](https://lakitna.medium.com/understanding-problem-json-adf68e5cf1f8)
 - [RFC 9457](https://datatracker.ietf.org/doc/html/rfc9457#name-detail)
 - [The Power of Problem Details for HTTP APIs - zuplo](https://zuplo.com/blog/2023/04/11/the-power-of-problem-details)
